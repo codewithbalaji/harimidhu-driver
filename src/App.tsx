@@ -1,18 +1,40 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import PrivateRoute from "./components/PrivateRoute";
+import Login from "./pages/Login";
 import Map from "./pages/Map";
 import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
   <BrowserRouter>
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<Orders />} />
-      <Route path="/map" element={<Map />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
 
-      {/* Catch-all route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Orders />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/map"
+          element={
+            <PrivateRoute>
+              <Map />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Catch-all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AuthProvider>
   </BrowserRouter>
 );
 

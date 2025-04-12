@@ -36,7 +36,7 @@ interface Order {
   items: OrderItem[];
   latitude: number;
   longitude: number;
-  status: 'pending' | 'in-progress' | 'delivered';
+  status: 'pending' | 'out-for-delivery' | 'delivered';
   total: number;
   updatedAt: string;
   distance?: number;
@@ -97,7 +97,9 @@ const Map = () => {
         id: doc.id,
         ...doc.data()
       })) as Order[];
-      setOrders(ordersData);
+      // Only show out-for-delivery orders
+      const outForDeliveryOrders = ordersData.filter(order => order.status === 'out-for-delivery');
+      setOrders(outForDeliveryOrders);
     });
 
     return () => unsubscribe();
@@ -151,12 +153,8 @@ const Map = () => {
                 <div>
                   <h3 className="font-semibold">{order.customerName}</h3>
                   <p>{order.deliveryAddress}</p>
-                  <p className={`text-sm ${
-                    order.status === 'pending' ? 'text-yellow-800' :
-                    order.status === 'in-progress' ? 'text-blue-800' :
-                    'text-green-800'
-                  }`}>
-                    Status: {order.status}
+                  <p className="text-sm text-blue-800">
+                    Status: Out for Delivery
                   </p>
                 </div>
               </Popup>
@@ -172,9 +170,9 @@ const Map = () => {
       </div>
 
       {/* Orders List */}
-      <div className="h-1/3 bg-white border-t border-gray-200 overflow-y-auto">
+      <div className="h-1/3 bg-white border-t border-gray-200 overflow-y-auto pb-20 md:pb-0">
         <div className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Nearby Orders</h2>
+          <h2 className="text-lg font-semibold mb-4">Out for Delivery</h2>
           <div className="space-y-2">
             {sortedOrders.map((order) => (
               <div
@@ -189,12 +187,8 @@ const Map = () => {
                     <h3 className="font-medium">{order.customerName}</h3>
                     <p className="text-sm text-gray-600">{order.deliveryAddress}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {order.status}
+                  <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
+                    Out for Delivery
                   </span>
                 </div>
                 {order.distance && (

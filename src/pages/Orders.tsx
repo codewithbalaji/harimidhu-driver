@@ -20,14 +20,14 @@ interface Order {
   items: OrderItem[]
   latitude: number
   longitude: number
-  status: 'pending' | 'in-progress' | 'delivered'
+  status: 'pending' | 'out-for-delivery' | 'delivered'
   total: number
   updatedAt: string
 }
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([])
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'in-progress' | 'delivered'>('all')
+  const [selectedStatus, setSelectedStatus] = useState<'out-for-delivery' | 'delivered'>('out-for-delivery')
   const [orderToDeliver, setOrderToDeliver] = useState<Order | null>(null)
 
   // Fetch orders from Firebase
@@ -38,7 +38,11 @@ const Orders = () => {
         id: doc.id,
         ...doc.data()
       })) as Order[]
-      setOrders(ordersData)
+      // Filter out pending orders
+      const filteredOrders = ordersData.filter(order => 
+        order.status === 'out-for-delivery' || order.status === 'delivered'
+      )
+      setOrders(filteredOrders)
     })
 
     return () => unsubscribe()
@@ -58,7 +62,7 @@ const Orders = () => {
   }
 
   const filteredOrders = orders.filter(order => 
-    selectedStatus === 'all' ? true : order.status === selectedStatus
+    selectedStatus === 'out-for-delivery' ? order.status === 'out-for-delivery' : order.status === 'delivered'
   )
 
   return (
@@ -69,34 +73,14 @@ const Orders = () => {
         {/* Status Filter */}
         <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
           <button
-            onClick={() => setSelectedStatus('all')}
+            onClick={() => setSelectedStatus('out-for-delivery')}
             className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-              selectedStatus === 'all' 
+              selectedStatus === 'out-for-delivery' 
                 ? 'bg-blue-100 text-blue-800' 
                 : 'bg-gray-100 text-gray-800'
             }`}
           >
-            All Orders
-          </button>
-          <button
-            onClick={() => setSelectedStatus('pending')}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-              selectedStatus === 'pending' 
-                ? 'bg-yellow-100 text-yellow-800' 
-                : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setSelectedStatus('in-progress')}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-              selectedStatus === 'in-progress' 
-                ? 'bg-blue-100 text-blue-800' 
-                : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            In Progress
+            Out for Delivery
           </button>
           <button
             onClick={() => setSelectedStatus('delivered')}
@@ -124,11 +108,10 @@ const Orders = () => {
                   <p className="text-sm text-gray-500 mt-1">{order.customerPhone}</p>
                 </div>
                 <span className={`px-2 py-1 rounded text-sm ${
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  order.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                  order.status === 'out-for-delivery' ? 'bg-blue-100 text-blue-800' :
                   'bg-green-100 text-green-800'
                 }`}>
-                  {order.status}
+                  {order.status === 'out-for-delivery' ? 'Out for Delivery' : 'Delivered'}
                 </span>
               </div>
 
@@ -148,7 +131,7 @@ const Orders = () => {
                 </div>
               </div>
 
-              {order.status !== 'delivered' && (
+              {order.status === 'out-for-delivery' && (
                 <div className="mt-4 flex justify-end">
                   <button
                     onClick={() => setOrderToDeliver(order)}
